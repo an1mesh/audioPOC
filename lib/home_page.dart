@@ -1,8 +1,14 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:io';
 
+import 'package:audio_player/constant.dart';
 import 'package:audioplayers/audioplayers.dart';
-
+import 'package:archive/archive_io.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_download_manager/flutter_download_manager.dart';
+
 import 'package:flutter_tts/flutter_tts.dart';
 
 import 'package:permission_handler/permission_handler.dart';
@@ -17,6 +23,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final player = AudioPlayer();
   final tts = FlutterTts();
+  final downloadManager = DownloadManager();
 
   @override
   void initState() {
@@ -24,6 +31,8 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     if (Platform.isAndroid) {
       storagePermission();
+    } else {
+      downloadFile();
     }
 
     tts.setLanguage('hi-IN');
@@ -75,9 +84,17 @@ class _HomePageState extends State<HomePage> {
                 var lang = await tts.getLanguages;
                 print(lang);
                 tts.speak('Swalekhan Typing Tutor');
-                print(FlutterTts().getLanguages);
+                print(tts.getLanguages);
               },
               child: const Text('Speak'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await compute((message) {}, extractFile());
+
+                print('extracted');
+              },
+              child: const Text('Unzip'),
             ),
           ],
         ),
@@ -93,21 +110,39 @@ class _HomePageState extends State<HomePage> {
         context: context,
         builder: (context) {
           return AlertDialog(
-            title: Text('Storage permission'),
-            content: Text('Please grant storage permission'),
+            title: const Text('Storage permission'),
+            content: const Text('Please grant storage permission'),
             actions: [
               TextButton(
                 onPressed: () {
                   openAppSettings();
                 },
-                child: Text('OK'),
+                child: const Text('OK'),
               ),
             ],
           );
         },
       );
+    } else if (await Permission.storage.request().isGranted) {
+      await compute((message) {}, downloadFile());
+    }
+  }
+
+  extractFile() {
+    if (Platform.isWindows) {
+      extractFileToDisk("E:/testing/Swalekhan-Data.zip", "E:/testing/");
+    } else if (Platform.isAndroid) {
+      extractFileToDisk("/storage/emulated/0/Download/Swalekhan-Data.zip",
+          "/storage/emulated/0/Download/New folder");
+    }
+  }
+
+  downloadFile() {
+    if (Platform.isAndroid) {
+      downloadManager.addDownload(ConstantString.downlaodPathHindiAndroid,
+          ConstantString.extractPathHindiAndroid);
+    } else if (Platform.isWindows) {
+      ConstantString.getDocumentPath();
     }
   }
 }
-
-//"C:/Users/aniro/Downloads/iphone_13_original.mp3"
