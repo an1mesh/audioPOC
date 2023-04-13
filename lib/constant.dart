@@ -6,9 +6,9 @@ class ConstantString {
   //Get windows document location
 
   static Future<String> getDocumentPath() async {
-    Directory windowsDir = await getApplicationDocumentsDirectory();
+    Directory? windowsDir = await getDownloadsDirectory();
     print(windowsDir);
-    return windowsDir.path;
+    return windowsDir!.path;
   }
 
   //Android
